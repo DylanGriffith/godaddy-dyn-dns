@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <domain> <record_name> <godaddy_api_key> <godaddy_api_secret>"
+    exit 1
+fi
+
+DOMAIN=$1
+RECORD_NAME=$2
+GODADDY_API_KEY=$3
+GODADDY_API_SECRET=$4
+
+IP_PREV=/tmp/ip.prev
+IP_NEW=/tmp/ip.new
+
+# Make sure this exists for the first time it runs
+touch $IP_PREV
+
+# Get the New IP Address
+dig +short myip.opendns.com @resolver1.opendns.com > $IP_NEW
+
+# Check if the IP has changed from last run
+if ! diff $IP_NEW $IP_PREV; then
+  echo "IP changed. Updating now..."
+
+  # Update DNS record using godaddy api
+  IP_NEW_VAL=`cat $IP_NEW`
+  curl -X PUT -H 'Content-Type: application/json' -H 'Accept: application/json' -H "Authorization: sso-key $GODADDY_API_KEY:$GODADDY_API_SECRET" "https://api.godaddy.com/v1/domains/$DOMAIN/records/A/$RECORD_NAME" -d "[{\"data\": \"$IP_NEW_VAL\", \"ttl\": 600}]"
+
+  echo "Updated!"
+  mv $IP_NEW $IP_PREV
+else
+  echo "IP has not changed"
+fi
