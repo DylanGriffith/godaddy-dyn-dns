@@ -12,8 +12,8 @@ RECORD_NAME=$2
 GODADDY_API_KEY=$3
 GODADDY_API_SECRET=$4
 
-IP_PREV=/tmp/ip.prev
-IP_NEW=/tmp/ip.new
+IP_PREV=/tmp/ip.$RECORD_NAME.prev
+IP_NEW=/tmp/ip.$RECORD_NAME.new
 
 # Make sure this exists for the first time it runs
 touch $IP_PREV
